@@ -28,15 +28,17 @@ class BlindTestPage extends StatefulWidget {
 class _BlindTestPageState extends State<BlindTestPage> {
   final int numberOfTeams = 6;
 
-  late List<int> scoresGlobaux;   // scores totaux
-  late List<int> scoresQuestion;  // scores de la question en cours
+  late List<int> scoresGlobaux;
+  late List<int> scoresQuestion;
   late List<Color?> tileColors;
+  late List<TextEditingController> teamNames;
 
   int question = 1;
 
   @override
   void initState() {
     super.initState();
+    teamNames = List.generate(numberOfTeams, (i) => TextEditingController(text: 'Équipe ${i + 1}'));
     _resetAll();
   }
 
@@ -52,7 +54,7 @@ class _BlindTestPageState extends State<BlindTestPage> {
 
   void addPoint(int teamIndex) {
     setState(() {
-      if (scoresQuestion[teamIndex] < 2) {
+      if (scoresQuestion[teamIndex] < 3) {
         scoresQuestion[teamIndex]++;
         scoresGlobaux[teamIndex]++;
         _updateColor(teamIndex);
@@ -71,12 +73,19 @@ class _BlindTestPageState extends State<BlindTestPage> {
   }
 
   void _updateColor(int index) {
-    if (scoresQuestion[index] == 0) {
-      tileColors[index] = null;
-    } else if (scoresQuestion[index] == 1) {
-      tileColors[index] = Colors.green[200];
-    } else if (scoresQuestion[index] >= 2) {
-      tileColors[index] = Colors.amber[300];
+    switch (scoresQuestion[index]) {
+      case 0:
+        tileColors[index] = null;
+        break;
+      case 1:
+        tileColors[index] = Colors.green[200];
+        break;
+      case 2:
+        tileColors[index] = Colors.amber[300];
+        break;
+      case 3:
+        tileColors[index] = Colors.purple[300];
+        break;
     }
   }
 
@@ -95,6 +104,14 @@ class _BlindTestPageState extends State<BlindTestPage> {
   }
 
   @override
+  void dispose() {
+    for (final controller in teamNames) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -110,7 +127,14 @@ class _BlindTestPageState extends State<BlindTestPage> {
                 color: tileColors[i],
                 margin: const EdgeInsets.symmetric(vertical: 6),
                 child: ListTile(
-                  title: Text('Équipe ${i + 1}'),
+                  title: TextField(
+                    controller: teamNames[i],
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Text('Score total : ${scoresGlobaux[i]}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
